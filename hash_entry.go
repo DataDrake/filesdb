@@ -12,17 +12,17 @@ type HashEntry struct {
 }
 
 func NewHashEntry() *HashEntry {
-	return &HashEntry{0, "", nil, make([]int, 0), make([]int, 0)}
+	return &HashEntry{0, "", nil}
 }
 
 func (e *HashEntry) Reset() interface{} {
 	// save value
 	v := e.value
 	// reset flags
-	e.flags == EMPTY
+	e.flags = EMPTY
 	// reset key
-	e.key == 0
+	e.key = ""
 	// reset value
-	e.value == nil
+	e.value = nil
 	return v
 }

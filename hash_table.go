@@ -39,13 +39,13 @@ func get_index(key string, size int, hash hash.Hash) int {
 }
 
 func (t *HashTable) Get(key string) (int, *HashEntry) {
-	index := get_index(key, t.hash, t.size)
+	index := get_index(key, t.size, t.hash)
 	e := t.data[index]
 	// if no match, it does not exist
 	if e.key != key {
 		return -1, nil
 	}
-	return index, e.value
+	return index, e
 }
 
 func rehash(t *HashTable) {
@@ -53,7 +53,7 @@ func rehash(t *HashTable) {
 	t2 := NewHashTable(2*t.size, t.hash)
 	//copy over the values
 	for _, v := range t.data {
-		index := get_index(v.key, t2.hash, t2.size)
+		index := get_index(v.key, t2.size, t2.hash)
 		t2.data[index] = v
 	}
 	// change pointer
@@ -61,7 +61,7 @@ func rehash(t *HashTable) {
 }
 
 func (t *HashTable) Put(key string, value interface{}) (int, *HashEntry) {
-	index := get_index(key, t.hash, t.size)
+	index := get_index(key, t.size, t.hash)
 	e := t.data[index]
 	//rehash if collision
 	if (e.flags&USED) > 0 && e.key != key {
@@ -75,7 +75,7 @@ func (t *HashTable) Put(key string, value interface{}) (int, *HashEntry) {
 }
 
 func (t *HashTable) Remove(key string) interface{} {
-	index := get_index(key, t.hash, t.size)
+	index := get_index(key, t.size, t.hash)
 	e := t.data[index]
 	// fail early if unused
 	if (e.flags & USED) == 0 {

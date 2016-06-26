@@ -38,6 +38,6 @@ func (t *Tree) AddItem(s string, delim rune, level int, prev int) int {
 	//recurse to the next level
 	next := t.AddItem(cdr, delim, level+1, curr)
 	//save this new branch
-	e.value = append(e.value.([]Branch), &Branch{prev, next})
+	e.value = append(e.value.([]*Branch), &Branch{prev, next})
 	return curr
 }
