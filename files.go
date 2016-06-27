@@ -1,8 +1,8 @@
 package filesdb
 
 import (
-	"bytes"
 	"errors"
+	"io"
 )
 
 type FileRecord struct {
@@ -10,48 +10,54 @@ type FileRecord struct {
 	children *Tree
 }
 
-func (r *FileRecord) ToCBOR() []byte {
-	result := make([]byte, 0)
+func (r *FileRecord) ToCBOR(o io.Writer) (err error) {
 	//start record, store name, start child record
-	result = append(result, []byte{FILE_RECORD, INF_ARRAY, r.name, BREAK, INF_ARRAY})
-	result = append(result, r.children.ToCBOR())
-	result = append(result, BREAK)
-	return result
+	_, err = o.Write([]byte{FILE_RECORD, INF_ARRAY, r.name, BREAK, INF_ARRAY})
+	if err != nil {
+		return
+	}
+	err = r.children.ToCBOR(o)
+	if err != nil {
+		return
+	}
+	_, err = o.Write([]byte{BREAK})
+	return
 }
 
-func (r *FileRecord) FromCBOR(cbor *bytes.Buffer) (done bool, err error) {
+func (r *FileRecord) FromCBOR(i io.Reader) (done bool, err error) {
+	b := make([]byte,1)
 	// try to read start of record
-	b, err := cbor.ReadByte()
+	_, err = i.Read(b)
 	if err != nil {
 		return
 	}
-	if b == BREAK {
-		goto SUCCESS
+	if b[0] == BREAK {
+		return true,err
 	}
-	if b != FILE_RECORD {
+	if b[0] != FILE_RECORD {
 		err = errors.New("Not a filerecord")
-		goto FAILURE
+		return
 	}
 	//try to read start of name
-	b, err = cbor.ReadByte()
+	_, err = i.Read(b)
 	if err != nil {
 		return
 	}
-	if b != INF_ARRAY {
+	if b[0] != INF_ARRAY {
 		err = errors.New("Missing name in file record")
-		goto FAILURE
+		return
 	}
 	// try to read name
-	b, err = cbor.ReadByte()
-	for err == nil && b != BREAK {
+	_, err = i.Read(b)
+	for err == nil && b[0] != BREAK {
 		r.name = append(r.name, b)
-		b, err = cbor.ReadByte()
+		_, err = i.Read(b)
 	}
 	if err != nil {
 		return
 	}
 	// read the children
-	done, err = r.children.FromCBOR(cbor)
+	done, err = r.children.FromCBOR(i)
 	if err != nil {
 		return
 	}
@@ -59,13 +65,6 @@ func (r *FileRecord) FromCBOR(cbor *bytes.Buffer) (done bool, err error) {
 		err = errors.New("Children not terminated correctly")
 		return
 	}
-	goto SUCCESS
-FAILURE:
-	// rewind
-	cbor.UnreadByte()
-	return
-
-SUCCESS:
 	done = true
 	return
 }

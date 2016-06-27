@@ -1,8 +1,8 @@
 package filesdb
 
 import (
-	"bytes"
 	"errors"
+	"io"
 	"strings"
 )
 
@@ -47,24 +47,28 @@ func (t *Tree) Add(s string, delim rune) {
 	return
 }
 
-func (t *Tree) ToCBOR() []bytes {
-	cbor := make([]bytes, 0)
-	cbor = append(cbor, INF_ARRAY)
-	for _, v := range t {
-		cbor = append(cbor, v.ToCBOR())
-	}
-	cbor = append(cbor, BREAK)
-	return cbor
-}
-
-func (t *Tree) FromCBOR(cbor *bytes.Buffer) (err error) {
-	b, err := cbor.ReadByte()
+func (t *Tree) ToCBOR(o io.Writer) (err error) {
+	_, err = o.Write([]byte{INF_ARRAY})
 	if err != nil {
 		return
 	}
-	if b != INF_ARRAY {
-		// rewind
-		cbor.UnreadByte()
+	for _, v := range t {
+		err = v.ToCBOR(o)
+		if err != nil {
+			return
+		}
+	}
+	_, err = o.Write([]byte{BREAK})
+	return
+}
+
+func (t *Tree) FromCBOR(i io.Reader) (err error) {
+	b := make([]byte,1)
+	_,err = i.Read(b)
+	if err != nil {
+		return
+	}
+	if b[0] != INF_ARRAY {
 		err = errors.New("Not an array for filerecords")
 		return
 	}
@@ -72,7 +76,7 @@ func (t *Tree) FromCBOR(cbor *bytes.Buffer) (err error) {
 	done := false
 	for !done {
 		r := &FileRecord{}
-		done, err = r.FromCBOR(cbor)
+		done, err = r.FromCBOR(i)
 		if err != nil {
 			return
 		}
@@ -80,11 +84,11 @@ func (t *Tree) FromCBOR(cbor *bytes.Buffer) (err error) {
 	}
 
 	// try to read terminator
-	b, err = cbor.ReadByte()
+	_, err = i.Read(b)
 	if err != nil {
 		return
 	}
-	if b != BREAK {
+	if b[0] != BREAK {
 		err = errors.New("Record listing was not correctly terminated")
 	}
 	return
