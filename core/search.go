@@ -22,7 +22,7 @@ func (t *Tree) SearchRecurse(name string, path string) {
 		if strings.Contains(v.name, name) {
 			fmt.Println(path + v.name)
 		}
-		v.children.SearchRecurse(name, filepath.Join(path+v.name, ""))
+		v.children.SearchRecurse(name, path+v.name+string(filepath.Separator))
 	}
 }
 
