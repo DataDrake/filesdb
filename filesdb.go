@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/DataDrake/filesdb"
+	"github.com/DataDrake/filesdb/core"
 	"os"
 )
 
