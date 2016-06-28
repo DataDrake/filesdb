@@ -29,7 +29,7 @@ func main() {
 			os.Exit(1)
 		}
 		db := bufio.NewReader(f)
-		filesdb.Search(args[1],db)
+		filesdb.Search(args[1], db)
 		f.Close()
 	case 1:
 		if args[0] != "update" {
@@ -45,15 +45,16 @@ func main() {
 			}
 		}
 		dir.Close()
-		db, err := os.Create("/var/log/filesdb/db.cbor")
+		f, err := os.Create("/var/log/filesdb/db.cbor")
 		if err != nil {
 			fmt.Printf("Could not create db.cbor, reason: %s\n", err.Error())
 			os.Exit(1)
 		}
-		t := filesdb.NewTree()
-		t.Fill("/")
-		t.ToCBOR(db)
-		db.Close()
+		db := bufio.NewWriter(f)
+		filesdb.Fill("/", db)
+		db.Flush()
+		f.Sync()
+		f.Close()
 	default:
 		usage()
 		os.Exit(1)
