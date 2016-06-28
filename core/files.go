@@ -7,12 +7,20 @@ import (
 
 type FileRecord struct {
 	name     string
-	children *Tree
+	children Tree
 }
 
 func (r *FileRecord) ToCBOR(o io.Writer) (err error) {
 	//start record, store name, start child record
-	_, err = o.Write([]byte{FILE_RECORD, INF_ARRAY, r.name, BREAK, INF_ARRAY})
+	_, err = o.Write([]byte{FILE_RECORD, INF_ARRAY})
+	if err != nil {
+		return
+	}
+	_, err = o.Write([]byte(r.name))
+	if err != nil {
+		return
+	}
+	_, err = o.Write([]byte{BREAK, INF_ARRAY})
 	if err != nil {
 		return
 	}
@@ -25,14 +33,14 @@ func (r *FileRecord) ToCBOR(o io.Writer) (err error) {
 }
 
 func (r *FileRecord) FromCBOR(i io.Reader) (done bool, err error) {
-	b := make([]byte,1)
+	b := make([]byte, 1)
 	// try to read start of record
 	_, err = i.Read(b)
 	if err != nil {
 		return
 	}
 	if b[0] == BREAK {
-		return true,err
+		return true, err
 	}
 	if b[0] != FILE_RECORD {
 		err = errors.New("Not a filerecord")
@@ -50,19 +58,15 @@ func (r *FileRecord) FromCBOR(i io.Reader) (done bool, err error) {
 	// try to read name
 	_, err = i.Read(b)
 	for err == nil && b[0] != BREAK {
-		r.name = append(r.name, b)
+		r.name += string(b)
 		_, err = i.Read(b)
 	}
 	if err != nil {
 		return
 	}
 	// read the children
-	done, err = r.children.FromCBOR(i)
+	err = r.children.FromCBOR(i)
 	if err != nil {
-		return
-	}
-	if !done {
-		err = errors.New("Children not terminated correctly")
 		return
 	}
 	done = true

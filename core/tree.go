@@ -8,11 +8,11 @@ import (
 
 type Tree []*FileRecord
 
-func NewTree() *Tree {
-	return &make(Tree, 0)
+func NewTree() Tree {
+	return make(Tree, 0)
 }
 
-func (t *Tree) Add(s string, delim rune) {
+func (t Tree) Add(s string, delim rune) {
 	i := strings.IndexRune(s, delim)
 	// terminate the tree
 	if len(s) == 0 {
@@ -47,7 +47,7 @@ func (t *Tree) Add(s string, delim rune) {
 	return
 }
 
-func (t *Tree) ToCBOR(o io.Writer) (err error) {
+func (t Tree) ToCBOR(o io.Writer) (err error) {
 	_, err = o.Write([]byte{INF_ARRAY})
 	if err != nil {
 		return
@@ -62,9 +62,9 @@ func (t *Tree) ToCBOR(o io.Writer) (err error) {
 	return
 }
 
-func (t *Tree) FromCBOR(i io.Reader) (err error) {
-	b := make([]byte,1)
-	_,err = i.Read(b)
+func (t Tree) FromCBOR(i io.Reader) (err error) {
+	b := make([]byte, 1)
+	_, err = i.Read(b)
 	if err != nil {
 		return
 	}
