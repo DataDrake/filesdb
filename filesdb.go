@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/DataDrake/filesdb/core"
 	"os"
+	"bufio"
 )
 
 func usage() {
@@ -27,13 +28,9 @@ func main() {
 			fmt.Printf("Could not open database, reason: %s\n", err.Error())
 			os.Exit(1)
 		}
-		t, err := filesdb.ReadTreeFromCBOR(f)
+		db := bufio.NewReader(f)
+		filesdb.Search(args[1],db)
 		f.Close()
-		if err != nil {
-			fmt.Printf("Could not import database, reason: %s\n", err.Error())
-			os.Exit(1)
-		}
-		t.Search(args[1])
 	case 1:
 		if args[0] != "update" {
 			usage()

@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"io"
+	"bytes"
 )
 
 func (t *Tree) FindAtCurrentLevel(name string) *FileRecord {
@@ -17,21 +19,59 @@ func (t *Tree) FindAtCurrentLevel(name string) *FileRecord {
 	return nil
 }
 
-func (t *Tree) SearchRecurse(name string, path string) {
-	for _, v := range *t {
-		if strings.Contains(v.name, name) {
-			fmt.Println(path + v.name)
+func SearchRecurse(query string, path string , db io.ByteReader) {
+	//try to read start of filearray
+	b, err := db.ReadByte()
+	if err != nil {
+		panic(err.Error())
+	}
+	if b != INF_ARRAY {
+		panic("Missing children in file record")
+	}
+	for {
+		// try to read start of record
+		b, err = db.ReadByte()
+		if err != nil {
+			return
 		}
-		v.children.SearchRecurse(name, path+v.name+string(filepath.Separator))
+		if b == BREAK {
+			break
+		}
+		if b != FILE_RECORD {
+			panic("Not a filerecord")
+		}
+		//try to read start of name
+		b, err = db.ReadByte()
+		if err != nil {
+			panic(err.Error())
+		}
+		if b != INF_ARRAY {
+			panic("Missing name in file record")
+		}
+		// try to read name
+		b, err =db.ReadByte()
+		name := bytes.NewBuffer(make([]byte,0))
+		for err == nil && b != BREAK {
+			name.WriteByte(b)
+			b, err = db.ReadByte()
+		}
+		if err != nil {
+			panic(err.Error())
+		}
+		if strings.Contains(name.String(), query) || strings.Contains(path, query){
+			fmt.Println(path + name.String())
+		}
+		// read the children
+		SearchRecurse(query, path+name.String()+string(filepath.Separator),db)
 	}
 }
 
-func (t *Tree) Search(name string) {
+func Search(name string, db io.ByteReader) {
 	if strings.ContainsRune(name, '/') {
 		fmt.Println("ERROR: search string should be a filename, not a path")
 		os.Exit(1)
 	}
-	t.SearchRecurse(name, "/")
+	SearchRecurse(name, "/", db)
 }
 
 func (t *Tree) Fill(path string) {
