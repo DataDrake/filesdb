@@ -27,8 +27,7 @@ func main() {
 			fmt.Printf("Could not open database, reason: %s\n", err.Error())
 			os.Exit(1)
 		}
-		t := filesdb.NewTree()
-		err = t.FromCBOR(f)
+		t, err := filesdb.ReadTreeFromCBOR(f)
 		f.Close()
 		if err != nil {
 			fmt.Printf("Could not import database, reason: %s\n", err.Error())

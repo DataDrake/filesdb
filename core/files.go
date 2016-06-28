@@ -20,19 +20,15 @@ func (r *FileRecord) ToCBOR(o io.Writer) (err error) {
 	if err != nil {
 		return
 	}
-	_, err = o.Write([]byte{BREAK, INF_ARRAY})
+	_, err = o.Write([]byte{BREAK})
 	if err != nil {
 		return
 	}
 	err = r.children.ToCBOR(o)
-	if err != nil {
-		return
-	}
-	_, err = o.Write([]byte{BREAK})
 	return
 }
 
-func (r *FileRecord) FromCBOR(i io.Reader) (done bool, err error) {
+func (r *FileRecord) FromCBOR(i io.Reader) (err error) {
 	b := make([]byte, 1)
 	// try to read start of record
 	_, err = i.Read(b)
@@ -40,7 +36,8 @@ func (r *FileRecord) FromCBOR(i io.Reader) (done bool, err error) {
 		return
 	}
 	if b[0] == BREAK {
-		return true, err
+		err = errors.New("FileRecord is over")
+		return
 	}
 	if b[0] != FILE_RECORD {
 		err = errors.New("Not a filerecord")
@@ -65,10 +62,9 @@ func (r *FileRecord) FromCBOR(i io.Reader) (done bool, err error) {
 		return
 	}
 	// read the children
-	err = r.children.FromCBOR(i)
+	r.children, err = ReadTreeFromCBOR(i)
 	if err != nil {
 		return
 	}
-	done = true
 	return
 }

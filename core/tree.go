@@ -62,7 +62,8 @@ func (t Tree) ToCBOR(o io.Writer) (err error) {
 	return
 }
 
-func (t Tree) FromCBOR(i io.Reader) (err error) {
+func ReadTreeFromCBOR(i io.Reader) (t Tree, err error) {
+	t = NewTree()
 	b := make([]byte, 1)
 	_, err = i.Read(b)
 	if err != nil {
@@ -73,23 +74,13 @@ func (t Tree) FromCBOR(i io.Reader) (err error) {
 		return
 	}
 	// read records
-	done := false
-	for !done {
+	for {
 		r := &FileRecord{}
-		done, err = r.FromCBOR(i)
-		if err != nil {
-			return
+		e := r.FromCBOR(i)
+		if e != nil {
+			break
 		}
 		t = append(t, r)
-	}
-
-	// try to read terminator
-	_, err = i.Read(b)
-	if err != nil {
-		return
-	}
-	if b[0] != BREAK {
-		err = errors.New("Record listing was not correctly terminated")
 	}
 	return
 }
