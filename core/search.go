@@ -12,7 +12,7 @@ import (
 )
 
 func SearchRecurse(query string, path string, db io.Reader) {
-	b := make([]byte,1)
+	b := make([]byte, 1)
 	//try to read start of filearray
 	_, err := db.Read(b)
 	if err != nil {
@@ -44,12 +44,12 @@ func SearchRecurse(query string, path string, db io.Reader) {
 		// try to read name
 		_, err = db.Read(b)
 		name := bytes.NewBuffer(make([]byte, 0))
-		for err == nil && b[0] != BREAK{
+		for err == nil && b[0] != BREAK {
 			name.WriteByte(b[0])
 			_, err = db.Read(b)
 		}
 		if err != nil {
-			fmt.Println(filepath.Join(path,name.String()))
+			fmt.Println(filepath.Join(path, name.String()))
 			panic(err.Error())
 		}
 		if strings.Contains(name.String(), query) || strings.Contains(path, query) {
@@ -71,11 +71,11 @@ func Search(name string, db io.Reader) {
 func Fill(path string, db io.Writer) {
 	fs, err := ioutil.ReadDir(path)
 	if err != nil {
-		_, e := db.Write([]byte{INF_ARRAY,BREAK})
+		_, e := db.Write([]byte{INF_ARRAY, BREAK})
 		if e != nil {
 			panic(e.Error())
 		}
-		fmt.Fprintf(os.Stderr,"%s\n",err.Error())
+		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 		return
 	}
 	_, err = db.Write([]byte{INF_ARRAY})
@@ -86,13 +86,13 @@ func Fill(path string, db io.Writer) {
 		name := f.Name()
 		r := scanner.Scanner{}
 		r.Init(strings.NewReader(name))
-		for r.IsValid(){
+		for r.IsValid() {
 			curr := r.Next()
 			if curr == scanner.EOF {
 				panic(err.Error())
 			}
 		}
-		_, err = db.Write([]byte{FILE_RECORD,INF_ARRAY})
+		_, err = db.Write([]byte{FILE_RECORD, INF_ARRAY})
 		if err != nil {
 			panic(err.Error())
 		}
@@ -108,7 +108,7 @@ func Fill(path string, db io.Writer) {
 		if f.IsDir() {
 			Fill(filepath.Join(path, name), db)
 		} else {
-			_, err = db.Write([]byte{INF_ARRAY,BREAK})
+			_, err = db.Write([]byte{INF_ARRAY, BREAK})
 			if err != nil {
 				panic(err.Error())
 			}

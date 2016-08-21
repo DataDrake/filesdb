@@ -1,11 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"github.com/DataDrake/filesdb/core"
 	"os"
-	"bufio"
 )
 
 func usage() {
